@@ -61,7 +61,25 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	std::vector<vector3> vertex;
+
+	// Initialize vertex points
+	float angle = (2.0 * PI / static_cast<float>(a_nSubdivisions));
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		vector3 point = vector3(glm::cos(angle * i) * a_fRadius, glm::sin(angle * i) * a_fRadius, 0.0f);
+		vertex.push_back(point);
+	}
+
+	// Create tris for cone
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddTri(vector3(0.0f, 0.0f, a_fHeight), vertex[i], vertex[(i + 1) % a_nSubdivisions]);
+	}
+
+	// Create tris for bottom of cone
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddTri(ZERO_V3, vertex[(i + 1) % a_nSubdivisions], vertex[i]);
+	}
+	
 	// -------------------------------
 
 	// Adding information about color
@@ -85,7 +103,27 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	std::vector<vector3> vertex;
+
+	// Initialize vertex points
+	float angle = (2.0 * PI / static_cast<float>(a_nSubdivisions));
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		vector3 point = vector3(glm::cos(angle * i) * a_fRadius, glm::sin(angle * i) * a_fRadius, 0.0f);
+		vertex.push_back(point);
+	}
+
+	// Create quads for the side of cylinder
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddQuad(vertex[i], vertex[(i + 1) % a_nSubdivisions], vertex[i] + vector3(0.0f, 0.0f, a_fHeight), vertex[(i + 1) % a_nSubdivisions] + vector3(0.0f, 0.0f, a_fHeight));
+	}
+	// Create tris for bottom
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddTri(ZERO_V3, vertex[(i + 1) % a_nSubdivisions], vertex[i]);
+	}
+	// Create tris for top
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddTri(vector3(0.0f, 0.0f, a_fHeight), vertex[i] + vector3(0.0f, 0.0f, a_fHeight), vertex[(i + 1) % a_nSubdivisions] + vector3(0.0f, 0.0f, a_fHeight));
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -115,7 +153,37 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
+	std::vector<vector3> vertexA;
+	std::vector<vector3> vertexB;
+	vector3 height = vector3(0.0f, 0.0f, a_fHeight);
+
+	// Initialize all vertex points
+	float angle = (2.0 * PI / static_cast<float>(a_nSubdivisions));
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		vector3 point = vector3(glm::cos(angle * i) * a_fOuterRadius, glm::sin(angle * i) * a_fOuterRadius, 0.0f);
+		vertexA.push_back(point);
+	}
+	angle = (2.0 * PI / static_cast<float>(a_nSubdivisions));
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		vector3 point = vector3(glm::cos(angle * i) * a_fInnerRadius, glm::sin(angle * i) * a_fInnerRadius, 0.0f);
+		vertexB.push_back(point);
+	}
+
+	// Create inner and outer walls of tube
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddQuad(vertexA[i], vertexA[(i + 1) % a_nSubdivisions], vertexA[i] + height, vertexA[(i + 1) % a_nSubdivisions] + height);
+	}
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddQuad(vertexB[(i + 1) % a_nSubdivisions], vertexB[i], vertexB[(i + 1) % a_nSubdivisions] + height, vertexB[i] + height);
+	}
+
+	// create top and bottom quads
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddQuad(vertexA[i] + height, vertexA[(i + 1) % a_nSubdivisions] + height, vertexB[i] + height, vertexB[(i + 1) % a_nSubdivisions] + height);
+	}
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		AddQuad(vertexA[(i + 1) % a_nSubdivisions], vertexA[i], vertexB[(i + 1) % a_nSubdivisions], vertexB[i]);
+	}
 	// -------------------------------
 
 	// Adding information about color
@@ -147,7 +215,50 @@ void MyMesh::GenerateTorus(float a_fOuterRadius, float a_fInnerRadius, int a_nSu
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
+	std::vector<vector3> vertex;
+
+	// Initialize all vertex points
+	float angle = (2.0 * PI / static_cast<float>(a_nSubdivisionsA));
+	for (int i = 0; i < a_nSubdivisionsA; i++) {
+		vector3 point = vector3(glm::cos(angle * i) * a_fInnerRadius, glm::sin(angle * i) * a_fInnerRadius, 0.0f);
+		vertex.push_back(point);
+	}
+
+	
+	for (int subdivion = 0; subdivion < a_nSubdivisionsB; subdivion++) {
+		std::vector<vector3> temp = vertex;
+		std::vector<vector3> vertexNew = vertex;
+		matrix4 m4Transform;
+		m4Transform = glm::rotate(IDENTITY_M4, (angle * subdivion), AXIS_Y);
+		m4Transform = glm::translate(m4Transform, vector3(a_fOuterRadius, 0.0f, 0.0f));
+
+		
+		for (int i = 0; i < a_nSubdivisionsA; i++) {
+			vertexNew[i] = m4Transform * vector4(vertexNew[i], 1.0f);
+		}
+
+		// set temp to the previously created circle (or points to a circle before the current one)
+		for (int i = 0; i < a_nSubdivisionsA; i++) {
+			matrix4 m4Transform2;
+			m4Transform2 = glm::rotate(IDENTITY_M4, (angle * (subdivion - 1)), AXIS_Y);
+			m4Transform2 = glm::translate(m4Transform2, vector3(a_fOuterRadius, 0.0f, 0.0f));
+			temp[i] = m4Transform2 * vector4(temp[i], 1.0f);
+		}
+
+		// Draw circles
+		vector3 v3Center = ZERO_V3;
+		v3Center = m4Transform * vector4(v3Center, 1.0f);
+		for (int i = 0; i < a_nSubdivisionsA; i++) {
+			AddTri(v3Center, vertexNew[i], vertexNew[(i + 1) % a_nSubdivisionsA]);
+		}
+
+		// connect circles
+		for (int i = 0; i < a_nSubdivisionsA; i++) {
+			AddQuad(vertexNew[i], vertexNew[(i + 1) % a_nSubdivisionsA], temp[i], temp[(i + 1) % a_nSubdivisionsA]);
+		}
+	}
+
+
 	// -------------------------------
 
 	// Adding information about color
@@ -172,7 +283,50 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	std::vector<vector3> vertex;
+
+	// Initialize all vertex points
+
+	float angle = (2.0 * PI / static_cast<float>(a_nSubdivisions));
+	for (int i = 0; i < a_nSubdivisions; i++) {
+		vector3 point = vector3(glm::cos(angle * i) * a_fRadius, glm::sin(angle * i) * a_fRadius, 0.0f);
+		vertex.push_back(point);
+	}
+
+
+	for (int subdivion = 0; subdivion < a_nSubdivisions; subdivion++) {
+		std::vector<vector3> temp = vertex;
+		std::vector<vector3> vertexNew = vertex;
+		matrix4 m4Transform;
+		m4Transform = glm::rotate(IDENTITY_M4, (angle * subdivion), AXIS_Y);
+
+
+		for (int i = 0; i < a_nSubdivisions; i++) {
+			vertexNew[i] = m4Transform * vector4(vertexNew[i], 1.0f);
+		}
+
+		// set temp to the previously created circle (or points to a circle before the current one)
+		for (int i = 0; i < a_nSubdivisions; i++) {
+			matrix4 m4Transform2;
+			m4Transform2 = glm::rotate(IDENTITY_M4, (angle * (subdivion - 1)), AXIS_Y);
+			temp[i] = m4Transform2 * vector4(temp[i], 1.0f);
+		}
+
+		// Draw circles
+		vector3 v3Center = ZERO_V3;
+		v3Center = m4Transform * vector4(v3Center, 1.0f);
+		for (int i = 0; i < a_nSubdivisions; i++) {
+			AddTri(v3Center, vertexNew[i], vertexNew[(i + 1) % a_nSubdivisions]);
+		}
+		for (int i = 0; i < a_nSubdivisions; i++) {
+			AddTri(v3Center, vertexNew[(i + 1) % a_nSubdivisions], vertexNew[i]);
+		}
+
+		// connect circles
+		for (int i = 0; i < a_nSubdivisions; i++) {
+			AddQuad(vertexNew[i], vertexNew[(i + 1) % a_nSubdivisions], temp[i], temp[(i + 1) % a_nSubdivisions]);
+		}
+	}
 	// -------------------------------
 
 	// Adding information about color
