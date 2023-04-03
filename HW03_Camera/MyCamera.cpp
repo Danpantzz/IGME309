@@ -21,20 +21,25 @@ void MyCamera::MoveForward(float a_fDistance)
 	//		 in the _Binary folder you will notice that we are moving 
 	//		 backwards and we never get closer to the plane as we should 
 	//		 because as we are looking directly at it.
-	m_v3Position += vector3(0.0f, 0.0f, -a_fDistance);
-	m_v3Target += vector3(0.0f, 0.0f, -a_fDistance);
+
+	// update position and target based on forward vector and distance moved
+	m_v3Position += (m_v3Forward * a_fDistance);
+	m_v3Target += (m_v3Forward * a_fDistance);
 }
 void MyCamera::MoveVertical(float a_fDistance)
 {
 	//Tip:: Look at MoveForward
+
 	m_v3Position += vector3(0.0f, a_fDistance, 0.0f);
 	m_v3Target += vector3(0.0f, a_fDistance, 0.0f);
 }
 void MyCamera::MoveSideways(float a_fDistance)
 {
 	//Tip:: Look at MoveForward
-	m_v3Position += vector3(a_fDistance, 0.0f, 0.0f);
-	m_v3Target += vector3(a_fDistance, 0.0f, 0.0f);
+
+	// update position and target based on rightward vector and distance moved
+	m_v3Position += (m_v3Rightward * a_fDistance);
+	m_v3Target += (m_v3Rightward * a_fDistance);
 }
 void MyCamera::CalculateView(void)
 {
@@ -45,18 +50,25 @@ void MyCamera::CalculateView(void)
 	//		 have change so you only need to focus on the directional and positional 
 	//		 vectors. There is no need to calculate any right click process or connections.
 
-	// need to create quaternion that can move the camera in x and y direction using PitchYawRoll
 
-	static quaternion qFinal;
-	qFinal = qFinal * glm::angleAxis(glm::radians(m_v3PitchYawRoll.x), vector3(1.0f, 0.0f, 0.0f));
-	qFinal = qFinal * glm::angleAxis(glm::radians(m_v3PitchYawRoll.y), vector3(0.0f, 1.0f, 0.0f));
-	qFinal = qFinal * glm::angleAxis(glm::radians(m_v3PitchYawRoll.z), vector3(0.0f, 0.0f, 0.0f));
+	// create quaternion orientation that can move the camera in x and y direction using PitchYawRoll, based on directional vectors
+	quaternion qFinal;
+	qFinal = qFinal * glm::angleAxis((m_v3PitchYawRoll.x), m_v3Rightward);
+	qFinal = qFinal * glm::angleAxis((m_v3PitchYawRoll.y), m_v3Upward);
+	qFinal = qFinal * glm::angleAxis((m_v3PitchYawRoll.z), m_v3Forward);
+
+	// change directional vectors to rotate based on the quaternion
+	m_v3Forward = glm::rotate(qFinal, m_v3Forward);
+	m_v3Rightward = glm::rotate(qFinal, m_v3Rightward);
+
+	// set target vector to position + forward vector
+	m_v3Target = m_v3Position + m_v3Forward;
+
+	m_v3PitchYawRoll = ZERO_V3;
 
 	m_m4View = glm::lookAt(m_v3Position, m_v3Target, m_v3Upward);
-	m_m4View *= ToMatrix4(qFinal);
 
-
-
+	
 }
 //You can assume that the code below does not need changes unless you expand the functionality
 //of the class or create helper methods, etc.
