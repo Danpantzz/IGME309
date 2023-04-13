@@ -36,6 +36,9 @@ void Application::InitVariables(void)
 	//set the model matrix and visibility of the last entity added
 	m_pEntityMngr->SetModelMatrix(glm::translate(vector3(-2.0f, -1.0f, -1.0f)));
 	m_pEntityMngr->SetAxisVisibility(true);
+
+	m_pEntityMngr->AddEntity("SphereCbue.obj", "Object");
+
 }
 void Application::Update(void)
 {
@@ -56,6 +59,8 @@ void Application::Update(void)
 	//Set model matrix to Steve
 	matrix4 mSteve = glm::translate(vector3(2.5f, 0.0f, 0.0f)) * glm::rotate(IDENTITY_M4, glm::radians(-55.0f), AXIS_Z);
 	m_pEntityMngr->SetModelMatrix(mSteve, "Steve");
+
+	m_pEntityMngr->AddEntityToRenderList("Object", false);
 
 
 	//Move the last entity added slowly to the right
