@@ -9,6 +9,87 @@ uint MyRigidBody::SAT(MyRigidBody* const a_pOther)
 
 	// use the Real Time Collision Detection book to find algorithm. Book found in syllabus
 
+	float ra, rb;
+	matrix3 R, AbsR;
+
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			R[i][j] = glm::dot(this->m_v3MaxL[i], a_pOther->m_v3MaxL[j]);
+		}
+	}
+
+	// comput translation vector t
+	vector3 t = a_pOther->m_v3Center - this->m_v3Center;
+	// bring t into a's coordinate frame
+	t = vector3(glm::dot(t.x, this->m_v3MaxL[0]), glm::dot(t.y, this->m_v3MaxL[1]), glm::dot(t.z, this->m_v3MaxL[2]));
+
+	// Compute common subexpressions
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			AbsR[i][j] = abs(R[i][j]) + DBL_EPSILON;
+		}
+	}
+
+	// test axis L = A0, L = A1, L = A2
+	for (int i = 0; i < 3; i++) {
+		ra = this->m_v3HalfWidth[i];
+		rb = (a_pOther->m_v3HalfWidth[0] * AbsR[i][0]) + (a_pOther->m_v3HalfWidth[1] * AbsR[i][1]) + (a_pOther->m_v3HalfWidth[2] * AbsR[i][2]);
+		if (abs(t[i]) > ra + rb) return 1;
+	}
+
+	// test axis L = B0, L = B1, L = B2
+	for (int i = 0; i < 3; i++) {
+		ra = (this->m_v3HalfWidth[0] * AbsR[0][i]) + (this->m_v3HalfWidth[1] * AbsR[1][i]) + (this->m_v3HalfWidth[2] * AbsR[2][i]);
+		rb = a_pOther->m_v3HalfWidth[i];
+		if (abs(t[0] * R[0][i] + t[1] * R[1][i] + t[2] * R[2][i]) > ra + rb) return 1;
+	}
+
+	// test axis L = A0 x B0
+	ra = (this->m_v3HalfWidth[1] * AbsR[2][0]) + (this->m_v3HalfWidth[2] * AbsR[1][0]);
+	rb = (a_pOther->m_v3HalfWidth[1] * AbsR[0][2]) + (a_pOther->m_v3HalfWidth[2] * AbsR[0][1]);
+	if (abs((t[2] * R[1][0]) - (t[1] * R[2][0])) > ra + rb) return 1;
+
+	// test axis L = A0 x B1
+	ra = (this->m_v3HalfWidth[1] * AbsR[2][1]) + (this->m_v3HalfWidth[2] * AbsR[1][1]);
+	rb = (a_pOther->m_v3HalfWidth[0] * AbsR[0][2]) + (a_pOther->m_v3HalfWidth[2] * AbsR[0][0]);
+	if (abs((t[2] * R[1][1]) - (t[1] * R[2][1])) > ra + rb) return 1;
+
+	// test axis L = A0 x B2
+	ra = (this->m_v3HalfWidth[1] * AbsR[2][2]) + (this->m_v3HalfWidth[2] * AbsR[1][2]);
+	rb = (a_pOther->m_v3HalfWidth[0] * AbsR[0][1]) + (a_pOther->m_v3HalfWidth[1] * AbsR[0][0]);
+	if (abs((t[2] * R[1][2]) - (t[1] * R[2][2])) > ra + rb) return 1;
+
+	// test axis L = A1 x B0
+	ra = (this->m_v3HalfWidth[0] * AbsR[2][0]) + (this->m_v3HalfWidth[2] * AbsR[0][0]);
+	rb = (a_pOther->m_v3HalfWidth[1] * AbsR[1][2]) + (a_pOther->m_v3HalfWidth[2] * AbsR[1][1]);
+	if (abs((t[0] * R[2][0]) - (t[2] * R[0][0])) > ra + rb) return 1;
+
+	// test axis L = A1 x B1
+	ra = (this->m_v3HalfWidth[0] * AbsR[2][1]) + (this->m_v3HalfWidth[2] * AbsR[0][1]);
+	rb = (a_pOther->m_v3HalfWidth[0] * AbsR[1][2]) + (a_pOther->m_v3HalfWidth[2] * AbsR[1][0]);
+	if (abs((t[0] * R[2][1]) - (t[2] * R[0][1])) > ra + rb) return 1;
+
+	// test axis L = A1 x B2
+	ra = (this->m_v3HalfWidth[0] * AbsR[2][2]) + (this->m_v3HalfWidth[2] * AbsR[0][2]);
+	rb = (a_pOther->m_v3HalfWidth[0] * AbsR[1][1]) + (a_pOther->m_v3HalfWidth[1] * AbsR[1][0]);
+	if (abs((t[0] * R[2][2]) - (t[2] * R[0][2])) > ra + rb) return 1;
+
+	// test axis L = A2 x B0
+	ra = (this->m_v3HalfWidth[0] * AbsR[1][0]) + (this->m_v3HalfWidth[1] * AbsR[0][0]);
+	rb = (a_pOther->m_v3HalfWidth[1] * AbsR[2][2]) + (a_pOther->m_v3HalfWidth[2] * AbsR[2][1]);
+	if (abs((t[1] * R[0][0]) - (t[0] * R[1][0])) > ra + rb) return 1;
+
+	// test axis L = A2 x B1
+	ra = (this->m_v3HalfWidth[0] * AbsR[1][1]) + (this->m_v3HalfWidth[1] * AbsR[0][1]);
+	rb = (a_pOther->m_v3HalfWidth[0] * AbsR[2][2]) + (a_pOther->m_v3HalfWidth[2] * AbsR[2][0]);
+	if (abs((t[1] * R[0][1]) - (t[0] * R[1][1])) > ra + rb) return 1;
+
+	// test axis L = A2 x B2
+	ra = (this->m_v3HalfWidth[0] * AbsR[1][2]) + (this->m_v3HalfWidth[1] * AbsR[0][2]);
+	rb = (a_pOther->m_v3HalfWidth[0] * AbsR[2][1]) + (a_pOther->m_v3HalfWidth[1] * AbsR[2][0]);
+	if (abs((t[1] * R[0][2]) - (t[0] * R[1][2])) > ra + rb) return 1;
+
+
 	return BTXs::eSATResults::SAT_NONE;
 }
 bool MyRigidBody::IsColliding(MyRigidBody* const a_pOther)
@@ -23,6 +104,8 @@ bool MyRigidBody::IsColliding(MyRigidBody* const a_pOther)
 	if (bColliding) //they are colliding with bounding sphere
 	{
 		uint nResult = SAT(a_pOther);
+		
+		if (nResult == 0) bColliding = false;
 
 		if (bColliding) //The SAT shown they are colliding
 		{
