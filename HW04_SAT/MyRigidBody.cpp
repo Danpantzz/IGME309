@@ -14,19 +14,19 @@ uint MyRigidBody::SAT(MyRigidBody* const a_pOther)
 
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
-			R[i][j] = glm::dot(this->m_v3MaxL[i], a_pOther->m_v3MaxL[j]);
+			R[i][j] = glm::dot(this->GetModelMatrix()[i], a_pOther->GetModelMatrix()[j]);
 		}
 	}
 
 	// comput translation vector t
 	vector3 t = a_pOther->m_v3Center - this->m_v3Center;
 	// bring t into a's coordinate frame
-	t = vector3(glm::dot(t.x, this->m_v3MaxL[0]), glm::dot(t.y, this->m_v3MaxL[1]), glm::dot(t.z, this->m_v3MaxL[2]));
+	t = vector3(glm::dot(t, (vector3)this->GetModelMatrix()[0]), glm::dot(t, (vector3)this->GetModelMatrix()[1]), glm::dot(t, (vector3)this->GetModelMatrix()[2]));
 
 	// Compute common subexpressions
 	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
-			AbsR[i][j] = abs(R[i][j]) + DBL_EPSILON;
+			AbsR[i][j] = abs(R[i][j]) + FLT_EPSILON;
 		}
 	}
 
@@ -105,7 +105,7 @@ bool MyRigidBody::IsColliding(MyRigidBody* const a_pOther)
 	{
 		uint nResult = SAT(a_pOther);
 		
-		if (nResult == 0) bColliding = false;
+		if (nResult > 0) bColliding = false;
 
 		if (bColliding) //The SAT shown they are colliding
 		{
