@@ -19,17 +19,23 @@ Octant::Octant(uint a_nMaxLevel, uint a_nIdealEntityCount)
 	m_pRoot = this;
 	m_lChild.clear();
 
+	std::vector<vector3> lMinMax;
+
 	//create a rigid body that encloses all the objects in this octant, it necessary you will need
 	//to subdivide the octant based on how many objects are in it already an how many you IDEALLY
 	//want in it, remember each subdivision will create 8 children for this octant but not all children
 	//of those children will have children of their own
 
-	//The following is a made-up size, you need to make sure it is measuring all the object boxes in the world
-	std::vector<vector3> lMinMax;
-	lMinMax.push_back(vector3(-50.0f));
-	lMinMax.push_back(vector3(25.0f));
-	RigidBody pRigidBody = RigidBody(lMinMax);
+	for (uint i = 0; i < m_pEntityMngr->GetEntityCount(); i++) {
+		Entity* pEntity = m_pEntityMngr->GetEntity(i);
+		RigidBody* pRigidBody = pEntity->GetRigidBody();
+		vector3 v3Max = pRigidBody->GetMaxGlobal();
+		vector3 v3Min = pRigidBody->GetMinGlobal();
+		lMinMax.push_back(v3Max);
+		lMinMax.push_back(v3Min);
+	}
 
+	RigidBody pRigidBody = RigidBody(lMinMax);
 
 	//The following will set up the values of the octant, make sure the are right, the rigid body at start
 	//is NOT fine, it has made-up values
@@ -72,6 +78,9 @@ void Octant::Subdivide(void)
 		return;
 
 	//Subdivide the space and allocate 8 children
+
+
+
 }
 bool Octant::ContainsAtLeast(uint a_nEntities)
 {
