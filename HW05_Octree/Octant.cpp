@@ -135,9 +135,15 @@ void Octant::Subdivide(void)
 bool Octant::ContainsAtLeast(uint a_nEntities)
 {
 	//You need to check how many entity objects live within this octant
+	int entities = 0;
+	for (uint i = 0; i < m_pEntityMngr->GetEntityCount(); i++) {
+		if (this->IsColliding(i)) {
+			entities++;
+		}
+	}
 
 	// if octant contains more entity count than a_nEntities, return true
-	if (this->m_pEntityMngr->GetEntityCount() > a_nEntities) {
+	if (entities > a_nEntities) {
 		return true;
 	}
 
